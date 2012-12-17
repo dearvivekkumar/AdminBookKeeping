@@ -1,4 +1,4 @@
-# File: hello2.pyw
+# File: Main.pyw
 
 from Tkinter import *
 import ttk
@@ -42,36 +42,39 @@ class StatusBar(Frame):
 class App:
 
     def __init__(self, root):
-        self.database=CDatabase()
+        self.database = CDatabase()
+        self.main_window = root
 
-        root.title("Tkinter Test Application")
-        self.create_menu(root)
-
-        self.create_toolbar(root)
-
-        status = StatusBar(root)
-        status.set("aaplication started")
-        status.pack(side = BOTTOM, fill=X)
+        self.main_window.title("Tkinter Test Application")
         
-        middleFrame = Frame(root)
-        middleFrame.pack(fill=BOTH, expand=1)
+        self.create_menu()
+        self.create_toolbar()
+        self.create_statusbar()
 
-        self.create_treeview(middleFrame)
+        self.middle_frame = Frame(self.main_window)
+        self.middle_frame.pack(fill=BOTH, expand=1)
 
-        self.CreateRightFrame(middleFrame)
+        self.paned_window = ttk.PanedWindow(self.middle_frame, orient=HORIZONTAL)
+        self.paned_window.pack(side=TOP, expand=Y, fill=BOTH, pady=2, padx='2m')
 
-        bottomFrame = Frame(root)
-        bottomFrame.pack(side = BOTTOM, anchor=E)
-        self.button = Button(bottomFrame, text = "Quit", fg = "red", command = root.destroy)
+        self.create_left_frame(self.paned_window)
+        self.create_right_frame(self.paned_window)
+
+        self.paned_window.add(self.left_frame)
+        self.paned_window.add(self.right_frame)
+
+        bottom_frame = Frame(self.main_window)
+        bottom_frame.pack(side = BOTTOM, anchor=E)
+        self.button = Button(bottom_frame, text = "Quit", fg = "red", command = self.main_window.destroy)
         self.button.pack(side = LEFT)
 
-        self.hi_there = Button(bottomFrame, text="Hello", command = self.say_hi)
+        self.hi_there = Button(bottom_frame, text="Hello", command = self.say_hi)
         self.hi_there.pack(side = LEFT)
         
 
-    def create_menu(self, root):
+    def create_menu(self):
         #create menu
-        menu = Menu(root, tearoff=0)
+        menu = Menu(self.main_window, tearoff=0)
         root.config(menu = menu)
         
         filemenu = Menu(root, tearoff=0)
@@ -85,9 +88,9 @@ class App:
         menu.add_cascade(label = "Help", menu = helpmenu)
         helpmenu.add_command(label = "About...", command = self.callback)
 
-    def create_toolbar(self, root):
+    def create_toolbar(self):
         # create a toolbar
-        toolbar = Frame(root)
+        toolbar = Frame(self.main_window)
 
         b = Button(toolbar, text="new", width=6, command=self.callback)
         b.pack(side=LEFT, padx=2, pady=2)
@@ -97,21 +100,31 @@ class App:
 
         toolbar.pack(side=TOP, fill=X)
 
+    def create_statusbar(self):
+        self.statusbar = StatusBar(self.main_window)
+        self.set_statusbar("Application Started!")
+        self.statusbar.pack(side = BOTTOM, fill=X)
+
+    def set_statusbar(self, text):
+        self.statusbar.set(text)
+
+
     def OnDoubleClick(self, event):
         item = self.tree.selection()[0]
-        print "you clicked on", self.tree.item(item,"text")
+        self.set_statusbar(self.tree.item(item,"text"))
 
-    def create_treeview(self, frame):
-        innerFrame = Frame(frame)
-        innerFrame.pack(side = LEFT, fill = BOTH, expand = 1)
-        self.dd = Label(innerFrame, text = "Category");
+    def create_left_frame(self, middle_frame):
+        self.left_frame = Frame(middle_frame)
+        self.left_frame.pack(side = LEFT, fill = BOTH, expand = 1)
+        self.dd = Label(self.left_frame, text = "Category");
         self.dd.pack(side = TOP)
-        self.tree = ttk.Treeview(innerFrame, selectmode="browse")
+        self.tree = ttk.Treeview(self.left_frame, selectmode = "browse")
         self.treeyscroll = ttk.Scrollbar(self.tree, orient = VERTICAL, command = self.tree.yview)
         self.treeyscroll.pack(side = RIGHT, fill = Y)
         self.tree.configure(yscrollcommand = self.treeyscroll.set)
         self.tree.heading("#0", text="Directory Structure", anchor='w')
         self.populateTreeview()
+        self.tree.pack(side = BOTTOM, fill=BOTH, expand=1)
 
         # Register event for treeview.
         #self.tree.bind("<Double-1>", self.OnDoubleClick)
@@ -124,7 +137,6 @@ class App:
         #<<TreeviewClose>> 	Generated just after setting the focus item to open=False.
         #self.tree.bind()
 
-        self.tree.pack(side = LEFT, fill=BOTH, expand=1)
 ##        # Inserted at the root, program chooses id:
 ##        self.tree.insert('', 'end', 'widgets', text='Widget Tour')
 ##
@@ -160,18 +172,14 @@ class App:
     def callback(self):
         print "called the callback!"
 
-    def CreateRightFrame(self, root):
-        self.rightFrame = Frame(root, width = 400, height = 400)
-        self.rightFrame.pack(side = LEFT, fill = BOTH, expand = 1)
+    def create_right_frame(self, parent_frame):
+        self.right_frame = Frame(parent_frame)
+        self.right_frame.pack(side = RIGHT, fill = BOTH, expand = 1)
+        test_label = Label(self.right_frame, text = "This is just a dummy label for showing the frame on right side of the middle frame")
+        test_label.pack()
 
-root = Tk()
-
-#"%dx%d%+d%+d" % (width, height, xoffset, yoffset)
-width=210
-height=300
-xoffset=1
-yoffset=1
-root.geometry("%dx%d%+d%+d" % (width, height, xoffset, yoffset))
-
-app = App(root)
-root.mainloop()
+if __name__ == "__main__":
+    root = Tk()
+    root.geometry("510x300+1+1")
+    app = App(root)
+    root.mainloop()
